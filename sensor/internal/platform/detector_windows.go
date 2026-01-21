@@ -82,7 +82,7 @@ func (w *WindowsDetector) GetGuidance() string {
   1. Install Npcap from https://npcap.com
      - During installation, enable "WinPcap API-compatible Mode"
   2. Run Command Prompt or PowerShell as Administrator
-  3. Run: sensor.exe
+  3. Run: lantern.exe
 
 Note: Windows requires Npcap for raw packet capture and
 Administrator privileges to access network interfaces.`

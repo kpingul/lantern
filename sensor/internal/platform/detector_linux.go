@@ -64,8 +64,8 @@ func (d *LinuxDetector) CheckPrerequisites() error {
 
 func (d *LinuxDetector) GetGuidance() string {
 	return `Linux Prerequisites:
-  1. Run with sudo: sudo ./sensor
-  2. Or grant capability: sudo setcap cap_net_raw+ep ./sensor
+  1. Run with sudo: sudo ./lantern
+  2. Or grant capability: sudo setcap cap_net_raw+ep ./lantern
 
 Note: Raw packet capture requires either root privileges or
 the CAP_NET_RAW capability on the binary.`

@@ -36,13 +36,13 @@ var (
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "sensor",
-		Short: "Local Network Visibility Sensor",
-		Long: `A network visibility tool for authorized sysadmins to discover
-devices on the local network and analyze traffic patterns.
+		Use:   "lantern",
+		Short: "Shine a light on your local network",
+		Long: `Lantern - Local Network Visibility Tool
 
-This tool captures network traffic passively (and optionally actively)
-to build an inventory of devices and their behaviors.`,
+Discover devices, fingerprint operating systems, and analyze traffic
+patterns on your network. Captures traffic passively (and optionally
+actively) to build an inventory of devices and their behaviors.`,
 		RunE: runSensor,
 	}
 
@@ -78,7 +78,7 @@ func runSensor(cmd *cobra.Command, args []string) error {
 	detector := platform.NewDetector()
 	osInfo := detector.GetOSInfo()
 
-	fmt.Printf("\n%s\n", color.CyanString("Local Network Visibility Sensor"))
+	fmt.Printf("\n%s\n", color.CyanString("Lantern - Local Network Visibility"))
 	fmt.Printf("OS: %s %s (%s)\n", osInfo.Name, osInfo.Version, osInfo.Arch)
 
 	// Check prerequisites

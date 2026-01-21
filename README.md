@@ -1,10 +1,10 @@
-# PacketSniffer
+# Lantern
 
-A local network visibility application for authorized sysadmins to discover devices, fingerprint operating systems, and analyze traffic patterns on their networks.
+Shine a light on your local network. Discover devices, fingerprint operating systems, and analyze traffic patterns.
 
 ## Components
 
-### Go Sensor (`sensor/`)
+### Lantern CLI (`sensor/`)
 Passive network monitoring tool that captures and analyzes local network traffic.
 
 **Features:**
@@ -27,7 +27,7 @@ Modern dark-mode web interface for visualizing network data.
 - Traffic analysis (protocol distribution, top ports, top talkers)
 - DNS domain queries
 - D3.js force-directed network graph
-- File import for sensor summaries
+- File import for Lantern summaries
 - SQLite persistence via sql.js
 
 ## Quick Start
@@ -37,19 +37,19 @@ Modern dark-mode web interface for visualizing network data.
 - Node.js 18+
 - libpcap (macOS: built-in, Linux: `apt install libpcap-dev`)
 
-### Build & Run Sensor
+### Build & Run Lantern
 ```bash
 cd sensor
-go build -o sensor ./cmd/sensor
+go build -o lantern ./cmd/sensor
 
 # Capture for 30 seconds (requires sudo for packet capture)
-sudo ./sensor --duration 30 --output ./captures
+sudo ./lantern --duration 30 --output ./captures
 
 # Options
-./sensor --help
-./sensor --list-ifaces          # List network interfaces
-./sensor --iface en0            # Specify interface
-./sensor --active               # Enable active discovery (ARP sweep)
+./lantern --help
+./lantern --list-ifaces          # List network interfaces
+./lantern --iface en0            # Specify interface
+./lantern --active               # Enable active discovery (ARP sweep)
 ```
 
 ### Run Dashboard
@@ -61,7 +61,7 @@ npm run dev
 ```
 
 ### Import Data
-1. Run the sensor to generate a `summary_*.json` file
+1. Run Lantern to generate a `summary_*.json` file
 2. Open the dashboard and go to Import
 3. Drag and drop the JSON file
 4. View devices, traffic, and network graph

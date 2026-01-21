@@ -11,7 +11,8 @@ import (
 
 const consentBanner = `
 ================================================================================
-                    LOCAL NETWORK VISIBILITY SENSOR
+                              LANTERN
+              Shine a light on your local network
 ================================================================================
 
 This tool captures network traffic on your local network to discover
@@ -88,7 +89,7 @@ func getConsentFilePath() string {
 	if err != nil {
 		home = "."
 	}
-	return filepath.Join(home, ".network-sensor-consent")
+	return filepath.Join(home, ".lantern-consent")
 }
 
 func saveConsent(path string) error {

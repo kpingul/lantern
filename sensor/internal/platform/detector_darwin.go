@@ -43,9 +43,9 @@ func (d *DarwinDetector) CheckPrerequisites() error {
 
 func (d *DarwinDetector) GetGuidance() string {
 	return `macOS Prerequisites:
-  1. Run with sudo: sudo ./sensor
+  1. Run with sudo: sudo ./lantern
   2. Or run the binary as root
 
 Note: On macOS, raw packet capture requires elevated privileges.
-The sensor needs access to the network interface in promiscuous mode.`
+Lantern needs access to the network interface in promiscuous mode.`
 }

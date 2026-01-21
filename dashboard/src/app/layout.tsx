@@ -3,8 +3,8 @@ import './globals.css';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Network Visibility Dashboard',
-  description: 'Local network asset discovery and traffic analysis',
+  title: 'Lantern',
+  description: 'Shine a light on your local network',
 };
 
 const navItems = [
@@ -74,7 +74,7 @@ export default function RootLayout({
                 </svg>
               </div>
               <div>
-                <h1 className="font-semibold text-[rgb(var(--text-primary))] text-sm">NetVis</h1>
+                <h1 className="font-semibold text-[rgb(var(--text-primary))] text-sm">Lantern</h1>
                 <p className="text-[10px] text-[rgb(var(--text-muted))] tracking-wider uppercase">Network Visibility</p>
               </div>
             </div>
@@ -99,7 +99,7 @@ export default function RootLayout({
             <div className="absolute bottom-0 left-0 right-0 border-t border-[rgb(var(--border-subtle))] p-4">
               <div className="flex items-center gap-2 text-xs text-[rgb(var(--text-muted))]">
                 <span className="status-dot online"></span>
-                <span className="mono">Sensor Online</span>
+                <span className="mono">Lantern Online</span>
               </div>
             </div>
           </aside>
