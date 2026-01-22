@@ -332,6 +332,15 @@ func (e *Engine) getDHCPVendorSignal(vendorClass string) *output.Signal {
 func (e *Engine) getVendorSignal(vendor string) *output.Signal {
 	lower := toLower(vendor)
 
+	if contains(lower, "randomized") {
+		// Randomized MACs are typically from mobile devices (iOS 14+, Android 10+)
+		return &output.Signal{
+			Type:   "Vendor",
+			Detail: "Randomized MAC (Mobile)",
+			Weight: 0.5,
+			OS:     "Mobile",
+		}
+	}
 	if contains(lower, "apple") {
 		return &output.Signal{
 			Type:   "Vendor",
@@ -362,6 +371,14 @@ func (e *Engine) getVendorSignal(vendor string) *output.Signal {
 			Detail: vendor,
 			Weight: 0.8,
 			OS:     "Linux",
+		}
+	}
+	if contains(lower, "commscope") || contains(lower, "netgear") || contains(lower, "tp-link") || contains(lower, "asus") || contains(lower, "linksys") || contains(lower, "ubiquiti") || contains(lower, "arris") || contains(lower, "cisco") {
+		return &output.Signal{
+			Type:   "Vendor",
+			Detail: vendor,
+			Weight: 0.9,
+			OS:     "Router/Network",
 		}
 	}
 

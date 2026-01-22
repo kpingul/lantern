@@ -362,6 +362,11 @@ func (l *Lookup) GetVendor(mac string) string {
 	mac = strings.ToUpper(mac)
 	mac = strings.ReplaceAll(mac, "-", ":")
 
+	// Check for locally administered (randomized) MAC
+	if IsRandomizedMAC(mac) {
+		return "Randomized MAC"
+	}
+
 	// Try OUI prefix (first 3 octets)
 	if len(mac) >= 8 {
 		prefix := mac[:8]
@@ -371,6 +376,24 @@ func (l *Lookup) GetVendor(mac string) string {
 	}
 
 	return "Unknown"
+}
+
+// IsRandomizedMAC checks if a MAC address is locally administered (randomized)
+// The second-least-significant bit of the first octet is 1 for locally administered addresses
+func IsRandomizedMAC(mac string) bool {
+	if len(mac) < 2 {
+		return false
+	}
+
+	// Get the second character of the MAC (second hex digit of first octet)
+	secondChar := mac[1]
+	if secondChar >= 'a' && secondChar <= 'f' {
+		secondChar = secondChar - 32 // to uppercase
+	}
+
+	// Locally administered addresses have second nibble of 2, 6, A, or E
+	// (bit 1 of first octet is set)
+	return secondChar == '2' || secondChar == '6' || secondChar == 'A' || secondChar == 'E'
 }
 
 // IsVirtualVendor checks if the vendor indicates a virtual machine
