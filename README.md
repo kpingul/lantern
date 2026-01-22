@@ -103,11 +103,25 @@ npm run dev
 
 ## Screenshots
 
-The dashboard features a dark cyber-ops theme with:
-- Cyan accent colors for devices and primary data
-- Emerald for success states and domains
-- Amber for warnings and external IPs
-- Interactive D3.js network graph with zoom/pan
+### Network Overview
+Dashboard home with traffic categories, protocol distribution, top talkers, and device fingerprints.
+
+![Network Overview](docs/images/lantern_1.png)
+
+### Network Assets
+Device inventory with MAC addresses, IPs, vendors, OS fingerprints, and discovery sources.
+
+![Network Assets](docs/images/lantern_2.png)
+
+### Network Traffic
+Protocol breakdown, top ports, and traffic categorization by service type.
+
+![Network Traffic](docs/images/lantern_3.png)
+
+### Network Graph
+Interactive D3.js force-directed graph showing device relationships and external connections.
+
+![Network Graph](docs/images/lantern_4.png)
 
 ## License
 
