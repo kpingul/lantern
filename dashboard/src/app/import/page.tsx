@@ -148,7 +148,7 @@ export default function ImportPage() {
               <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
             ) : (
               <svg
-                className={`w-8 h-8 ${isDragging ? 'text-cyan-400' : 'text-[rgb(var(--text-muted))]'}`}
+                className={`w-8 h-8 ${isDragging ? 'text-cyan-600' : 'text-[rgb(var(--text-muted))]'}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -167,7 +167,7 @@ export default function ImportPage() {
             {uploading ? 'Uploading...' : isDragging ? 'Drop file here' : 'Upload Summary File'}
           </h3>
           <p className="text-[rgb(var(--text-muted))] mb-6">
-            Drag and drop a <span className="mono text-cyan-400">summary_*.json</span> file, or click to browse
+            Drag and drop a <span className="mono text-cyan-600">summary_*.json</span> file, or click to browse
           </p>
 
           <label className="btn btn-primary cursor-pointer">
@@ -197,12 +197,12 @@ export default function ImportPage() {
           {result.success ? (
             <>
               <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-emerald-400">Import Successful</p>
+                <p className="font-medium text-emerald-600">Import Successful</p>
                 <p className="text-sm text-[rgb(var(--text-muted))]">
                   Imported {result.deviceCount} devices (Capture #{result.captureId})
                 </p>
@@ -211,12 +211,12 @@ export default function ImportPage() {
           ) : (
             <>
               <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center">
-                <svg className="w-5 h-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-rose-400">Import Failed</p>
+                <p className="font-medium text-rose-600">Import Failed</p>
                 <p className="text-sm text-[rgb(var(--text-muted))]">{result.error}</p>
               </div>
             </>
@@ -264,7 +264,7 @@ export default function ImportPage() {
                 {captures.map((capture) => (
                   <tr key={capture.id}>
                     <td>
-                      <span className="mono text-cyan-400">#{capture.id}</span>
+                      <span className="mono text-cyan-600">#{capture.id}</span>
                     </td>
                     <td>
                       <span className="mono text-sm">{capture.filename}</span>
@@ -308,9 +308,9 @@ export default function ImportPage() {
         <div className="space-y-3 text-sm text-[rgb(var(--text-muted))]">
           <p>Run the sensor to capture network data:</p>
           <pre className="p-4 rounded bg-[rgb(var(--bg-primary))] mono text-xs overflow-x-auto">
-            <code className="text-cyan-400">sudo ./sensor --duration 30 --output ./captures</code>
+            <code className="text-cyan-600">sudo ./sensor --duration 30 --output ./captures</code>
           </pre>
-          <p>Then upload the generated <span className="mono text-cyan-400">summary_*.json</span> file here.</p>
+          <p>Then upload the generated <span className="mono text-cyan-600">summary_*.json</span> file here.</p>
         </div>
       </div>
     </div>

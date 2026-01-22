@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import type { GraphData, GraphNode, GraphLink } from '@/types';
+import { useCapture } from '@/lib/capture-context';
 
 export default function GraphPage() {
+  const { selectedCaptureId, loading: captureLoading } = useCapture();
   const svgRef = useRef<SVGSVGElement>(null);
   const [data, setData] = useState<GraphData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -12,8 +14,13 @@ export default function GraphPage() {
 
   useEffect(() => {
     async function fetchGraph() {
+      if (!selectedCaptureId) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await fetch('/api/graph');
+        const res = await fetch(`/api/graph?captureId=${selectedCaptureId}`);
         const graphData = await res.json();
         setData(graphData);
       } catch (error) {
@@ -23,8 +30,11 @@ export default function GraphPage() {
       }
     }
 
-    fetchGraph();
-  }, []);
+    if (!captureLoading) {
+      setLoading(true);
+      fetchGraph();
+    }
+  }, [selectedCaptureId, captureLoading]);
 
   useEffect(() => {
     if (!svgRef.current || !data || data.nodes.length === 0) return;
@@ -224,7 +234,7 @@ export default function GraphPage() {
             <svg
               ref={svgRef}
               className="w-full h-full"
-              style={{ background: 'rgb(var(--bg-tertiary))' }}
+              style={{ background: 'rgb(var(--bg-primary))' }}
             />
           )}
 
@@ -250,11 +260,11 @@ export default function GraphPage() {
           <div className="absolute top-4 left-4 flex gap-4 text-xs">
             <div className="px-3 py-1.5 rounded bg-[rgb(var(--bg-primary))/80] backdrop-blur">
               <span className="text-[rgb(var(--text-muted))]">Nodes: </span>
-              <span className="mono text-cyan-400">{data?.nodes.length || 0}</span>
+              <span className="mono text-cyan-600">{data?.nodes.length || 0}</span>
             </div>
             <div className="px-3 py-1.5 rounded bg-[rgb(var(--bg-primary))/80] backdrop-blur">
               <span className="text-[rgb(var(--text-muted))]">Links: </span>
-              <span className="mono text-cyan-400">{data?.links.length || 0}</span>
+              <span className="mono text-cyan-600">{data?.links.length || 0}</span>
             </div>
           </div>
         </div>
@@ -295,7 +305,7 @@ export default function GraphPage() {
               {selectedNode.mac && (
                 <div>
                   <label className="text-xs text-[rgb(var(--text-muted))] uppercase tracking-wider">MAC Address</label>
-                  <p className="mt-1 mono text-sm text-cyan-400">{selectedNode.mac}</p>
+                  <p className="mt-1 mono text-sm text-cyan-600">{selectedNode.mac}</p>
                 </div>
               )}
 

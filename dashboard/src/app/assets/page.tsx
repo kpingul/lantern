@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useCapture } from '@/lib/capture-context';
 
 interface Device {
   id: number;
@@ -15,6 +16,7 @@ interface Device {
 }
 
 export default function AssetsPage() {
+  const { selectedCaptureId, loading: captureLoading } = useCapture();
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
@@ -22,8 +24,13 @@ export default function AssetsPage() {
 
   useEffect(() => {
     async function fetchDevices() {
+      if (!selectedCaptureId) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await fetch('/api/devices');
+        const res = await fetch(`/api/devices?captureId=${selectedCaptureId}`);
         const data = await res.json();
         setDevices(Array.isArray(data) ? data : []);
       } catch (error) {
@@ -33,8 +40,11 @@ export default function AssetsPage() {
       }
     }
 
-    fetchDevices();
-  }, []);
+    if (!captureLoading) {
+      setLoading(true);
+      fetchDevices();
+    }
+  }, [selectedCaptureId, captureLoading]);
 
   const filteredDevices = devices.filter((device) => {
     const matchesSearch =
@@ -65,9 +75,9 @@ export default function AssetsPage() {
 
   const getConfidenceColor = (confidence: number | null) => {
     if (!confidence) return 'text-[rgb(var(--text-muted))]';
-    if (confidence >= 0.8) return 'text-emerald-400';
-    if (confidence >= 0.5) return 'text-amber-400';
-    return 'text-rose-400';
+    if (confidence >= 0.8) return 'text-emerald-600';
+    if (confidence >= 0.5) return 'text-amber-600';
+    return 'text-rose-600';
   };
 
   return (
@@ -182,7 +192,7 @@ export default function AssetsPage() {
                 {filteredDevices.map((device) => (
                   <tr key={device.id}>
                     <td>
-                      <span className="mono text-cyan-400">{device.mac}</span>
+                      <span className="mono text-cyan-600">{device.mac}</span>
                     </td>
                     <td>
                       <div className="flex flex-wrap gap-1">

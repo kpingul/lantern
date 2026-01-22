@@ -19,6 +19,7 @@ type Device struct {
 	DiscoverySource string // "passive", "active-arp", "active-mdns", etc.
 	FirstSeen       time.Time
 	LastSeen        time.Time
+	DHCPVendorClass string // DHCP vendor class identifier for OS fingerprinting
 }
 
 // NewDevice creates a new device with initial values

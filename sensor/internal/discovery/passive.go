@@ -85,23 +85,51 @@ func (p *PassiveDiscovery) extractMDNSHostname(packet gopacket.Packet) string {
 
 	dns := dnsLayer.(*layers.DNS)
 
-	// Look for hostname in answers
+	// Look for hostname in answers (A/AAAA records)
 	for _, answer := range dns.Answers {
 		name := string(answer.Name)
+		// Look for direct hostname.local patterns
 		if len(name) > 6 && name[len(name)-6:] == ".local" {
-			// Strip .local suffix and any service type
 			hostname := name[:len(name)-6]
-			// Remove any service prefix like "_tcp." etc.
-			for i := len(hostname) - 1; i >= 0; i-- {
-				if hostname[i] == '.' {
-					return hostname[:i]
+			// Skip if it starts with underscore (service type)
+			if len(hostname) > 0 && hostname[0] != '_' {
+				// Remove any trailing service info
+				if idx := findLastDot(hostname); idx > 0 && hostname[idx+1] == '_' {
+					hostname = hostname[:idx]
+				}
+				if len(hostname) > 0 && hostname[0] != '_' {
+					return hostname
 				}
 			}
-			return hostname
+		}
+	}
+
+	// Also check questions for hostname patterns
+	for _, q := range dns.Questions {
+		name := string(q.Name)
+		if len(name) > 6 && name[len(name)-6:] == ".local" {
+			hostname := name[:len(name)-6]
+			if len(hostname) > 0 && hostname[0] != '_' {
+				if idx := findLastDot(hostname); idx > 0 && hostname[idx+1] == '_' {
+					hostname = hostname[:idx]
+				}
+				if len(hostname) > 0 && hostname[0] != '_' {
+					return hostname
+				}
+			}
 		}
 	}
 
 	return ""
+}
+
+func findLastDot(s string) int {
+	for i := len(s) - 1; i >= 0; i-- {
+		if s[i] == '.' {
+			return i
+		}
+	}
+	return -1
 }
 
 // extractNBNSHostname extracts hostname from NBNS packets
@@ -164,12 +192,17 @@ func (p *PassiveDiscovery) processDHCP(packet gopacket.Packet) {
 
 	device := p.registry.GetOrCreate(srcMAC)
 
-	// Get hostname from DHCP options
+	// Get hostname and vendor class from DHCP options
 	for _, opt := range dhcp.Options {
-		if opt.Type == layers.DHCPOptHostname {
-			if device.Hostname == "" {
+		switch opt.Type {
+		case layers.DHCPOptHostname:
+			if device.Hostname == "" && len(opt.Data) > 0 {
 				device.Hostname = string(opt.Data)
 			}
+		case layers.DHCPOptClassID:
+			// Vendor class identifier can help with OS detection
+			vendorClass := string(opt.Data)
+			device.DHCPVendorClass = vendorClass
 		}
 	}
 

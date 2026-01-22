@@ -5,31 +5,35 @@
 @tailwind utilities;
 
 :root {
-  /* Deep space palette */
-  --bg-primary: 12 14 20;
-  --bg-secondary: 17 19 27;
-  --bg-tertiary: 23 26 36;
-  --bg-elevated: 30 33 45;
+  /* Light mode palette */
+  --bg-primary: 250 250 252;
+  --bg-secondary: 255 255 255;
+  --bg-tertiary: 241 245 249;
+  --bg-elevated: 226 232 240;
 
-  /* Electric accents */
-  --accent-cyan: 6 182 212;
-  --accent-cyan-glow: 6 182 212 / 0.3;
-  --accent-amber: 245 158 11;
-  --accent-emerald: 16 185 129;
-  --accent-rose: 244 63 94;
+  /* Darker accent colors for light mode readability */
+  --accent-cyan: 8 145 178;
+  --accent-cyan-light: 6 182 212;
+  --accent-cyan-glow: 8 145 178 / 0.3;
+  --accent-amber: 217 119 6;
+  --accent-amber-light: 245 158 11;
+  --accent-emerald: 5 150 105;
+  --accent-emerald-light: 16 185 129;
+  --accent-rose: 225 29 72;
+  --accent-rose-light: 244 63 94;
 
-  /* Text hierarchy */
-  --text-primary: 248 250 252;
-  --text-secondary: 148 163 184;
+  /* Text hierarchy - inverted for light mode */
+  --text-primary: 15 23 42;
+  --text-secondary: 51 65 85;
   --text-muted: 100 116 139;
 
   /* Borders & lines */
-  --border-subtle: 39 42 55;
-  --border-accent: 6 182 212 / 0.3;
+  --border-subtle: 203 213 225;
+  --border-accent: 8 145 178 / 0.3;
 
   /* Shadows */
-  --glow-cyan: 0 0 20px rgb(6 182 212 / 0.15), 0 0 40px rgb(6 182 212 / 0.1);
-  --glow-amber: 0 0 20px rgb(245 158 11 / 0.15);
+  --glow-cyan: 0 0 20px rgb(6 182 212 / 0.2), 0 0 40px rgb(6 182 212 / 0.15);
+  --glow-amber: 0 0 20px rgb(245 158 11 / 0.2);
 
   --radius: 0.5rem;
 
@@ -39,7 +43,7 @@
   --card: var(--bg-secondary);
   --card-foreground: var(--text-primary);
   --primary: var(--accent-cyan);
-  --primary-foreground: 0 0 0;
+  --primary-foreground: 255 255 255;
   --secondary: var(--bg-tertiary);
   --secondary-foreground: var(--text-secondary);
   --muted: var(--bg-tertiary);
@@ -91,7 +95,7 @@ body {
   background-size: 40px 40px;
 }
 
-/* Scanline effect */
+/* Scanline effect - subtle for light mode */
 .scanlines::after {
   content: '';
   position: absolute;
@@ -100,8 +104,8 @@ body {
     0deg,
     transparent,
     transparent 2px,
-    rgb(0 0 0 / 0.03) 2px,
-    rgb(0 0 0 / 0.03) 4px
+    rgb(0 0 0 / 0.01) 2px,
+    rgb(0 0 0 / 0.01) 4px
   );
   pointer-events: none;
 }
@@ -136,6 +140,7 @@ body {
   border-radius: var(--radius);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.05), 0 1px 2px rgb(0 0 0 / 0.03);
 }
 
 .card::before {
@@ -144,11 +149,11 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
+  height: 2px;
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(var(--accent-cyan) / 0.5),
+    rgb(var(--accent-cyan) / 0.6),
     transparent
   );
 }
@@ -270,7 +275,7 @@ body {
 
 .btn-primary {
   background: linear-gradient(135deg, rgb(var(--accent-cyan)), rgb(var(--accent-cyan) / 0.8));
-  color: rgb(0 0 0);
+  color: rgb(255 255 255);
   border: none;
   box-shadow: 0 2px 8px rgb(var(--accent-cyan) / 0.3);
 }

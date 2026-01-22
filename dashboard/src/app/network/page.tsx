@@ -1,6 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useCapture } from '@/lib/capture-context';
+
+interface TrafficCategory {
+  category: string;
+  count: number;
+  ports: { port: number; service: string; count: number }[];
+}
 
 interface TrafficData {
   protocols: { protocol: string; count: number }[];
@@ -14,6 +21,7 @@ interface TrafficData {
   }[];
   dnsDomains: { domain: string; query_count: number }[];
   destinations: { address: string; connection_count: number; bytes_total: number }[];
+  categories?: TrafficCategory[];
 }
 
 function formatBytes(bytes: number): string {
@@ -25,13 +33,19 @@ function formatBytes(bytes: number): string {
 }
 
 export default function NetworkPage() {
+  const { selectedCaptureId, loading: captureLoading } = useCapture();
   const [data, setData] = useState<TrafficData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchTraffic() {
+      if (!selectedCaptureId) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await fetch('/api/traffic');
+        const res = await fetch(`/api/traffic?captureId=${selectedCaptureId}`);
         const trafficData = await res.json();
         setData(trafficData);
       } catch (error) {
@@ -41,8 +55,11 @@ export default function NetworkPage() {
       }
     }
 
-    fetchTraffic();
-  }, []);
+    if (!captureLoading) {
+      setLoading(true);
+      fetchTraffic();
+    }
+  }, [selectedCaptureId, captureLoading]);
 
   const totalTraffic = data?.protocols.reduce((sum, p) => sum + p.count, 0) || 0;
 
@@ -53,6 +70,25 @@ export default function NetworkPage() {
     ARP: 'bg-rose-500',
     Other: 'bg-slate-500',
   };
+
+  const categoryColors: Record<string, { bg: string; text: string; icon: string }> = {
+    Web: { bg: 'bg-cyan-100', text: 'text-cyan-700', icon: '🌐' },
+    Database: { bg: 'bg-violet-100', text: 'text-violet-700', icon: '🗄️' },
+    Email: { bg: 'bg-amber-100', text: 'text-amber-700', icon: '📧' },
+    'File Sharing': { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: '📁' },
+    'Remote Access': { bg: 'bg-rose-100', text: 'text-rose-700', icon: '🖥️' },
+    DNS: { bg: 'bg-blue-100', text: 'text-blue-700', icon: '🔍' },
+    Network: { bg: 'bg-slate-100', text: 'text-slate-700', icon: '🔗' },
+    Streaming: { bg: 'bg-pink-100', text: 'text-pink-700', icon: '📺' },
+    VoIP: { bg: 'bg-indigo-100', text: 'text-indigo-700', icon: '📞' },
+    Messaging: { bg: 'bg-teal-100', text: 'text-teal-700', icon: '💬' },
+    Discovery: { bg: 'bg-orange-100', text: 'text-orange-700', icon: '📡' },
+    Application: { bg: 'bg-gray-100', text: 'text-gray-700', icon: '📦' },
+    Ephemeral: { bg: 'bg-gray-100', text: 'text-gray-600', icon: '⚡' },
+    Other: { bg: 'bg-gray-100', text: 'text-gray-600', icon: '❓' },
+  };
+
+  const totalCategoryTraffic = data?.categories?.reduce((sum, c) => sum + c.count, 0) || 0;
 
   return (
     <div className="p-8">
@@ -145,7 +181,7 @@ export default function NetworkPage() {
                         <div key={`${port.protocol}-${port.port}`}>
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center gap-2">
-                              <span className="mono text-sm text-cyan-400">{port.port}</span>
+                              <span className="mono text-sm text-cyan-600">{port.port}</span>
                               <span className="tag tag-muted text-[10px]">{port.protocol}</span>
                             </div>
                             <span className="mono text-xs text-[rgb(var(--text-muted))]">
@@ -171,6 +207,60 @@ export default function NetworkPage() {
             </div>
           </div>
 
+          {/* Traffic Categories */}
+          {data?.categories && data.categories.length > 0 && (
+            <div className="card">
+              <div className="p-5 border-b border-[rgb(var(--border-subtle))]">
+                <h2 className="font-medium text-[rgb(var(--text-primary))]">Traffic by Category</h2>
+                <p className="text-xs text-[rgb(var(--text-muted))] mt-1">Services detected on your network</p>
+              </div>
+              <div className="p-5">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                  {data.categories.slice(0, 12).map((category) => {
+                    const colors = categoryColors[category.category] || categoryColors.Other;
+                    const percentage = totalCategoryTraffic > 0
+                      ? ((category.count / totalCategoryTraffic) * 100).toFixed(1)
+                      : '0';
+                    return (
+                      <div
+                        key={category.category}
+                        className={`p-4 rounded-lg ${colors.bg} border border-[rgb(var(--border-subtle))] hover:shadow-md transition-shadow`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg">{colors.icon}</span>
+                          <span className={`font-medium text-sm ${colors.text}`}>
+                            {category.category}
+                          </span>
+                        </div>
+                        <div className="text-2xl font-semibold text-[rgb(var(--text-primary))] mono mb-1">
+                          {percentage}%
+                        </div>
+                        <div className="text-xs text-[rgb(var(--text-muted))]">
+                          {category.count.toLocaleString()} packets
+                        </div>
+                        {category.ports.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-[rgb(var(--border-subtle))]">
+                            <div className="text-xs text-[rgb(var(--text-muted))] mb-1">Top services:</div>
+                            <div className="flex flex-wrap gap-1">
+                              {category.ports.slice(0, 3).map((port) => (
+                                <span
+                                  key={port.port}
+                                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-white/50 text-[rgb(var(--text-secondary))] mono"
+                                >
+                                  {port.service}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Top Talkers & DNS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Top Talkers */}
@@ -193,15 +283,15 @@ export default function NetworkPage() {
                       {data.talkers.slice(0, 10).map((talker) => (
                         <tr key={talker.ip}>
                           <td>
-                            <span className="mono text-cyan-400">{talker.ip}</span>
+                            <span className="mono text-cyan-600">{talker.ip}</span>
                           </td>
                           <td className="text-right">
-                            <span className="mono text-emerald-400">
+                            <span className="mono text-emerald-600">
                               {formatBytes(talker.bytes_sent)}
                             </span>
                           </td>
                           <td className="text-right">
-                            <span className="mono text-amber-400">
+                            <span className="mono text-amber-600">
                               {formatBytes(talker.bytes_received)}
                             </span>
                           </td>
@@ -272,7 +362,7 @@ export default function NetworkPage() {
                     {data.destinations.slice(0, 15).map((dest) => (
                       <tr key={dest.address}>
                         <td>
-                          <span className="mono text-amber-400">{dest.address}</span>
+                          <span className="mono text-amber-600">{dest.address}</span>
                         </td>
                         <td className="text-right">
                           <span className="mono">{dest.connection_count.toLocaleString()}</span>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useCapture } from '@/lib/capture-context';
 
 interface Capture {
   id: number;
@@ -21,7 +22,7 @@ interface Stats {
 }
 
 export default function HomePage() {
-  const [captures, setCaptures] = useState<Capture[]>([]);
+  const { captures, selectedCaptureId, loading: captureLoading } = useCapture();
   const [stats, setStats] = useState<Stats>({
     totalDevices: 0,
     totalCaptures: 0,
@@ -30,30 +31,29 @@ export default function HomePage() {
   });
   const [loading, setLoading] = useState(true);
 
+  const selectedCapture = captures.find(c => c.id === selectedCaptureId);
+
   useEffect(() => {
     async function fetchData() {
+      if (!selectedCaptureId) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const [capturesRes, devicesRes, trafficRes] = await Promise.all([
-          fetch('/api/captures'),
-          fetch('/api/devices'),
-          fetch('/api/traffic'),
+        const [devicesRes, trafficRes] = await Promise.all([
+          fetch(`/api/devices?captureId=${selectedCaptureId}`),
+          fetch(`/api/traffic?captureId=${selectedCaptureId}`),
         ]);
 
-        const capturesData = await capturesRes.json();
         const devicesData = await devicesRes.json();
         const trafficData = await trafficRes.json();
 
-        setCaptures(Array.isArray(capturesData) ? capturesData.slice(0, 5) : []);
-
-        const totalPackets = Array.isArray(capturesData)
-          ? capturesData.reduce((sum: number, c: Capture) => sum + c.packet_count, 0)
-          : 0;
-
         setStats({
           totalDevices: Array.isArray(devicesData) ? devicesData.length : 0,
-          totalCaptures: Array.isArray(capturesData) ? capturesData.length : 0,
+          totalCaptures: captures.length,
           totalDomains: Array.isArray(trafficData.dnsDomains) ? trafficData.dnsDomains.length : 0,
-          totalPackets,
+          totalPackets: selectedCapture?.packet_count || 0,
         });
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -62,8 +62,11 @@ export default function HomePage() {
       }
     }
 
-    fetchData();
-  }, []);
+    if (!captureLoading) {
+      setLoading(true);
+      fetchData();
+    }
+  }, [selectedCaptureId, captureLoading, captures.length, selectedCapture?.packet_count]);
 
   const statCards = [
     {
@@ -111,22 +114,22 @@ export default function HomePage() {
   const colorClasses: Record<string, { bg: string; text: string; glow: string }> = {
     cyan: {
       bg: 'bg-cyan-500/10',
-      text: 'text-cyan-400',
+      text: 'text-cyan-600',
       glow: 'shadow-cyan-500/20',
     },
     emerald: {
       bg: 'bg-emerald-500/10',
-      text: 'text-emerald-400',
+      text: 'text-emerald-600',
       glow: 'shadow-emerald-500/20',
     },
     amber: {
       bg: 'bg-amber-500/10',
-      text: 'text-amber-400',
+      text: 'text-amber-600',
       glow: 'shadow-amber-500/20',
     },
     rose: {
       bg: 'bg-rose-500/10',
-      text: 'text-rose-400',
+      text: 'text-rose-600',
       glow: 'shadow-rose-500/20',
     },
   };
@@ -173,7 +176,7 @@ export default function HomePage() {
         <div className="lg:col-span-2 card">
           <div className="flex items-center justify-between p-5 border-b border-[rgb(var(--border-subtle))]">
             <h2 className="font-medium text-[rgb(var(--text-primary))]">Recent Captures</h2>
-            <Link href="/import" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+            <Link href="/import" className="text-xs text-cyan-600 hover:text-cyan-700 transition-colors">
               View All →
             </Link>
           </div>
@@ -203,7 +206,7 @@ export default function HomePage() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[rgb(var(--bg-tertiary))] flex items-center justify-center">
-                        <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
@@ -242,7 +245,7 @@ export default function HomePage() {
               className="flex items-center gap-3 p-3 rounded-lg bg-[rgb(var(--bg-tertiary))] hover:bg-[rgb(var(--bg-elevated))] transition-colors group"
             >
               <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
-                <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
               </div>
@@ -257,7 +260,7 @@ export default function HomePage() {
               className="flex items-center gap-3 p-3 rounded-lg bg-[rgb(var(--bg-tertiary))] hover:bg-[rgb(var(--bg-elevated))] transition-colors group"
             >
               <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
-                <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
@@ -272,7 +275,7 @@ export default function HomePage() {
               className="flex items-center gap-3 p-3 rounded-lg bg-[rgb(var(--bg-tertiary))] hover:bg-[rgb(var(--bg-elevated))] transition-colors group"
             >
               <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
               </div>
@@ -291,7 +294,7 @@ export default function HomePage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-[rgb(var(--text-secondary))]">Database</span>
-                <span className="flex items-center gap-2 text-emerald-400">
+                <span className="flex items-center gap-2 text-emerald-600">
                   <span className="status-dot online"></span>
                   Connected
                 </span>

@@ -31,6 +31,93 @@ interface DestRow {
   bytes_total: number;
 }
 
+// Port to category mapping
+const portCategories: Record<number, { category: string; service: string }> = {
+  // Web
+  80: { category: 'Web', service: 'HTTP' },
+  443: { category: 'Web', service: 'HTTPS' },
+  8080: { category: 'Web', service: 'HTTP Proxy' },
+  8443: { category: 'Web', service: 'HTTPS Alt' },
+  3000: { category: 'Web', service: 'Dev Server' },
+  5000: { category: 'Web', service: 'Dev Server' },
+
+  // Database
+  3306: { category: 'Database', service: 'MySQL' },
+  5432: { category: 'Database', service: 'PostgreSQL' },
+  27017: { category: 'Database', service: 'MongoDB' },
+  6379: { category: 'Database', service: 'Redis' },
+  1433: { category: 'Database', service: 'SQL Server' },
+  1521: { category: 'Database', service: 'Oracle' },
+
+  // Email
+  25: { category: 'Email', service: 'SMTP' },
+  465: { category: 'Email', service: 'SMTPS' },
+  587: { category: 'Email', service: 'SMTP Submission' },
+  110: { category: 'Email', service: 'POP3' },
+  995: { category: 'Email', service: 'POP3S' },
+  143: { category: 'Email', service: 'IMAP' },
+  993: { category: 'Email', service: 'IMAPS' },
+
+  // File Sharing
+  21: { category: 'File Sharing', service: 'FTP' },
+  22: { category: 'Remote Access', service: 'SSH' },
+  445: { category: 'File Sharing', service: 'SMB' },
+  139: { category: 'File Sharing', service: 'NetBIOS' },
+  2049: { category: 'File Sharing', service: 'NFS' },
+
+  // DNS & Network
+  53: { category: 'DNS', service: 'DNS' },
+  67: { category: 'Network', service: 'DHCP Server' },
+  68: { category: 'Network', service: 'DHCP Client' },
+  123: { category: 'Network', service: 'NTP' },
+  161: { category: 'Network', service: 'SNMP' },
+
+  // Streaming & Media
+  554: { category: 'Streaming', service: 'RTSP' },
+  1935: { category: 'Streaming', service: 'RTMP' },
+  5004: { category: 'Streaming', service: 'RTP' },
+  5005: { category: 'Streaming', service: 'RTP' },
+
+  // Messaging & VoIP
+  5060: { category: 'VoIP', service: 'SIP' },
+  5061: { category: 'VoIP', service: 'SIP TLS' },
+  3478: { category: 'VoIP', service: 'STUN' },
+  5222: { category: 'Messaging', service: 'XMPP' },
+
+  // Remote Access
+  23: { category: 'Remote Access', service: 'Telnet' },
+  3389: { category: 'Remote Access', service: 'RDP' },
+  5900: { category: 'Remote Access', service: 'VNC' },
+
+  // Discovery
+  5353: { category: 'Discovery', service: 'mDNS' },
+  1900: { category: 'Discovery', service: 'SSDP/UPnP' },
+  5355: { category: 'Discovery', service: 'LLMNR' },
+  137: { category: 'Discovery', service: 'NetBIOS NS' },
+  138: { category: 'Discovery', service: 'NetBIOS DG' },
+};
+
+function categorizePort(port: number): { category: string; service: string } {
+  if (portCategories[port]) {
+    return portCategories[port];
+  }
+
+  // Heuristics for unknown ports
+  if (port >= 1024 && port <= 49151) {
+    return { category: 'Application', service: `Port ${port}` };
+  }
+  if (port >= 49152) {
+    return { category: 'Ephemeral', service: `Port ${port}` };
+  }
+  return { category: 'Other', service: `Port ${port}` };
+}
+
+interface CategorySummary {
+  category: string;
+  count: number;
+  ports: { port: number; service: string; count: number }[];
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -111,12 +198,44 @@ export async function GET(request: NextRequest) {
 
     const destinations = getAll<DestRow>(db, destQuery, destParams);
 
+    // Build traffic categories from ports
+    const categoryMap = new Map<string, CategorySummary>();
+
+    for (const port of ports) {
+      const { category, service } = categorizePort(port.port);
+
+      if (!categoryMap.has(category)) {
+        categoryMap.set(category, {
+          category,
+          count: 0,
+          ports: [],
+        });
+      }
+
+      const cat = categoryMap.get(category)!;
+      cat.count += port.count;
+      cat.ports.push({
+        port: port.port,
+        service,
+        count: port.count,
+      });
+    }
+
+    // Sort categories by count and convert to array
+    const categories = Array.from(categoryMap.values())
+      .sort((a, b) => b.count - a.count)
+      .map(cat => ({
+        ...cat,
+        ports: cat.ports.sort((a, b) => b.count - a.count).slice(0, 5), // Top 5 ports per category
+      }));
+
     return NextResponse.json({
       protocols,
       ports,
       talkers,
       dnsDomains,
       destinations,
+      categories,
     });
   } catch (error) {
     console.error('Traffic fetch error:', error);

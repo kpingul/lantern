@@ -235,11 +235,150 @@ func (e *Engine) ApplyFingerprints() {
 			continue
 		}
 
+		// Add DHCP vendor class signal if available
+		if device.DHCPVendorClass != "" {
+			signal := e.getDHCPVendorSignal(device.DHCPVendorClass)
+			if signal != nil {
+				signals = append(signals, *signal)
+			}
+		}
+
+		// Add vendor-based signal
+		if device.Vendor != "" {
+			signal := e.getVendorSignal(device.Vendor)
+			if signal != nil {
+				signals = append(signals, *signal)
+			}
+		}
+
 		guess := e.calculateGuess(signals)
 		device.OSGuess = guess.OS
 		device.Confidence = guess.Confidence
 		device.SignalsUsed = signals
 	}
+
+	// Also process devices without packet signals but with DHCP/vendor info
+	for _, device := range e.registry.All() {
+		if device.OSGuess != "" {
+			continue // Already processed
+		}
+
+		var signals []output.Signal
+
+		if device.DHCPVendorClass != "" {
+			signal := e.getDHCPVendorSignal(device.DHCPVendorClass)
+			if signal != nil {
+				signals = append(signals, *signal)
+			}
+		}
+
+		if device.Vendor != "" {
+			signal := e.getVendorSignal(device.Vendor)
+			if signal != nil {
+				signals = append(signals, *signal)
+			}
+		}
+
+		if len(signals) > 0 {
+			guess := e.calculateGuess(signals)
+			device.OSGuess = guess.OS
+			device.Confidence = guess.Confidence
+			device.SignalsUsed = signals
+		}
+	}
+}
+
+// getDHCPVendorSignal returns an OS signal based on DHCP vendor class
+func (e *Engine) getDHCPVendorSignal(vendorClass string) *output.Signal {
+	lower := toLower(vendorClass)
+
+	if contains(lower, "msft") || contains(lower, "microsoft") {
+		return &output.Signal{
+			Type:   "DHCP-Vendor",
+			Detail: vendorClass,
+			Weight: 0.85,
+			OS:     "Windows",
+		}
+	}
+	if contains(lower, "android") {
+		return &output.Signal{
+			Type:   "DHCP-Vendor",
+			Detail: vendorClass,
+			Weight: 0.9,
+			OS:     "Android",
+		}
+	}
+	if contains(lower, "dhcpcd") {
+		return &output.Signal{
+			Type:   "DHCP-Vendor",
+			Detail: vendorClass,
+			Weight: 0.7,
+			OS:     "Linux",
+		}
+	}
+	if contains(lower, "udhcp") {
+		return &output.Signal{
+			Type:   "DHCP-Vendor",
+			Detail: vendorClass,
+			Weight: 0.6,
+			OS:     "Linux",
+		}
+	}
+
+	return nil
+}
+
+// getVendorSignal returns an OS signal based on MAC vendor
+func (e *Engine) getVendorSignal(vendor string) *output.Signal {
+	lower := toLower(vendor)
+
+	if contains(lower, "apple") {
+		return &output.Signal{
+			Type:   "Vendor",
+			Detail: vendor,
+			Weight: 0.6,
+			OS:     "macOS",
+		}
+	}
+	if contains(lower, "samsung") || contains(lower, "huawei") || contains(lower, "xiaomi") || contains(lower, "oneplus") || contains(lower, "oppo") || contains(lower, "vivo") {
+		return &output.Signal{
+			Type:   "Vendor",
+			Detail: vendor,
+			Weight: 0.7,
+			OS:     "Android",
+		}
+	}
+	if contains(lower, "microsoft") {
+		return &output.Signal{
+			Type:   "Vendor",
+			Detail: vendor,
+			Weight: 0.5,
+			OS:     "Windows",
+		}
+	}
+	if contains(lower, "raspberry") {
+		return &output.Signal{
+			Type:   "Vendor",
+			Detail: vendor,
+			Weight: 0.8,
+			OS:     "Linux",
+		}
+	}
+
+	return nil
+}
+
+func toLower(s string) string {
+	result := make([]byte, len(s))
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c >= 'A' && c <= 'Z' {
+			result[i] = c + 32
+		} else {
+			result[i] = c
+		}
+	}
+	return string(result)
 }
 
 // OSGuess represents an OS determination with confidence
