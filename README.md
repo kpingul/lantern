@@ -1,8 +1,4 @@
-<p align="center">
-  <img src="docs/images/lantern_logo.png" alt="Lantern Logo" width="200">
-</p>
-
-# Lantern
+# <img src="docs/images/lantern_logo.png" alt="Lantern Logo" width="50" valign="middle"> Lantern
 
 Shine a light on your local network. Discover devices, fingerprint operating systems, and analyze traffic patterns.
 
